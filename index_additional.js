@@ -1,34 +1,54 @@
+//Main prerequisites
 const dcorejs = require('./node_modules/dcorejs');
 const config = {
     dcoreNetworkWSPaths: ['wss://hackathon2.decent.ch:8090'],
     chainId: '9c54faed15d4089d3546ac5eb0f1392434a970be15f1452ce1e7764f70f02936'
 };
 
-//Objects where account informations is stored: logins, passwords, account managing objects
-let storage = new Object;
+/** 
+ * Storage like objects
+*/
+let storage = {};
 let entities = {};
 
 
-//Initialization
+/**
+ * Initialization
+ */
 dcorejs.initialize(config);
 
 
-//Opening connection
+/** 
+ * Opening connection
+ * @returns {Promise} resolve or reject methods return
+*/
 async function connection() {
     return await dcorejs.connection().openConnection();
 }
 
 
-//Getting an account info by project name. Using the function to get projects address
+/** 
+ * Getting an account info by project name
+ * @returns {Promise} resolve or reject methods return
+*/
 async function getProjectDataByName(projectName) {
     let projectData = await dcorejs.account().getAccountByName(projectName);
     return projectData;
 }
 
 
-//Registers investors and projects, add their info to the storage
+/**
+ * Registers entities like investors or projects
+ * @param {string} accName wallet account name
+ * @param {string} password 
+ * @param {string} privateKey wallet private key
+ * @param {boolean} investorType if true, registers an investor, otherwise registers a project
+ * @param {string} id a string of a number
+ * @param {number} capAmount 
+ * @returns {bool} true if success, false if account exists
+ */
 function registerEntity(accName, password, privateKey, investorType, id, capAmount = 0) {
-    if (!_checkEntity()) {
+    if (_checkEntity()) {
         console.error('There is already such account');
         return false;}
     if (investorType == true) {
@@ -40,15 +60,24 @@ function registerEntity(accName, password, privateKey, investorType, id, capAmou
     return true;
 }
 
-//Private. checks if an entity exists
+
+/**
+ * Private. Checks entity in storage
+ * @param {string} accName wallet account name
+ * @returns {boolean} true if account exists
+ */
 function _checkEntity(accName) {
     if (accName in storage){
-        return false;
+        return true;
     }
 }
 
-
-//Private. checks if the passwors suits the account
+/**
+ * Private. Checks password
+ * @param {string} accName wallet account name
+ * @param {string} password 
+ * @returns {boolean} true. Returns false if the password is not the right one
+ */
 function _checkPassword(accName, password) {
     if (storage[accName] != password) {
         return false;
@@ -57,7 +86,12 @@ function _checkPassword(accName, password) {
 }
 
 
-//Private.Allows using entity objects
+/**
+ * Private. Gives access to the object management
+ * @param {string} accName wallet account name
+ * @param {string} password
+ * @returns {object} an object of investor or project
+ */
 function _enterAcc(accName, password) {
     if (!_checkEntity(accName) && _checkPassword(accName, password)) {
         return entities[accName];
@@ -65,14 +99,30 @@ function _enterAcc(accName, password) {
 }
 
 
-//An investor object&methods
+/**
+ * An object of investor account. Used for account management.
+ */
 class AccountInvestor {
+    /**
+     * Constructor. Defines main attributes
+     * @param {string} userName same with account name
+     * @param {string} privateKey investors private key
+     * @param {string} id account id
+     */
     constructor(userName, privateKey, id) {
         this.user = userName;
         this.privateKey = privateKey;
         this.id = id;
     };
     
+    /**
+     * Async sending method. Uses DECENT platform sdk - method
+     * @param {number} amount sending amount
+     * @param {string} assetID id of an asset
+     * @param {string} accName investors account name
+     * @param {string} toName project name
+     * @param {string} message message
+     */
     async sendAmount(amount, assetID, accName, toName, message) {
         return await dcorejs.account().transfer(
             amount,
