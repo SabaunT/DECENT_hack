@@ -100,7 +100,7 @@ function _enterAcc(accName, password) {
 
 
 /**
- * An object of investor account. Used for account management.
+ * An object of an investor account. Used for account management.
  */
 class AccountInvestor {
     /**
@@ -122,6 +122,7 @@ class AccountInvestor {
      * @param {string} accName investors account name
      * @param {string} toName project name
      * @param {string} message message
+     * @returns {Promise} 
      */
     async sendAmount(amount, assetID, accName, toName, message) {
         return await dcorejs.account().transfer(
@@ -140,8 +141,17 @@ class AccountInvestor {
 }
 
 
-//A project object&methods НЕ ЗАКОНЧЕН
+/**
+ * An object of a project account. Used for account management.
+ */
 class AccountProject {
+    /**
+     * Defines main attributes
+     * @param {string} accName Project name. Same as wallet account name
+     * @param {string} privateKey wallet private key
+     * @param {string} id id of a project
+     * @param {number} capAmount cap
+     */
     constructor(accName, privateKey, id, capAmount) {
         this.projectName = accName;
         this.privateKey = privateKey;
@@ -149,13 +159,27 @@ class AccountProject {
         this.cap = capAmount;    
     }
 
+    /**
+     * Getting projects current balance
+     * @param {string} assetID DECENT asset id
+     * @returns {Promise}
+     */
     async currentCap(assetID) {
         return await dcorejs.account().getBalance(this.id, assetID, false);        
     }
 }
 
 
-//Funding method
+/**
+ * Private. Funding method without check         
+ * @param {string} accName investor/sender name
+ * @param {string} password accounts password
+ * @param {nubmer} amount investing amount
+ * @param {string} assetID DECENT asset id
+ * @param {string} toName projects name
+ * @param {string} message message
+ * @param {function} cb callback
+ */
 function _fundTheProject(accName, password, amount, assetID, toName, message, cb) {
     try {
         var investMethod = _enterAcc(accName, password);
@@ -175,7 +199,16 @@ function _fundTheProject(accName, password, amount, assetID, toName, message, cb
 }
 
 
-//Secure funding method:
+/**
+ * Secure funding method with check
+ * @param {string} accName investor/sender name
+ * @param {string} password accounts password
+ * @param {nubmer} amount investing amount
+ * @param {string} assetID DECENT asset id
+ * @param {string} toName projects name
+ * @param {string} message message
+ * @returns result of an async transaction method or an error
+ */
 async function fundTheProjectChecked(accName, password, amount, assetID, toName, message) {
     try {
         var capCheck = entities[toName];
